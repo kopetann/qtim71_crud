@@ -5,6 +5,8 @@ import { DeleteResult, Repository } from "typeorm";
 import { CreateNewsDto } from "@app/news/dto/createNewsDto";
 import { UserService } from "@app/users/user.service";
 import { UserEntity } from "@app/users/user.entity";
+import { promises } from "dns";
+import { UpdateNewsDto } from "@app/news/dto/updateNewsDto";
 
 @Injectable()
 export class NewsService {
@@ -20,6 +22,16 @@ export class NewsService {
     const newsList = await queryPosts.getMany();
 
     return { newsList, newsCount } as any;
+  }
+
+  async updateNews(slug: string,body:UpdateNewsDto): Promise<NewsEntity> {
+    const news = await this.getBySlug(slug);
+    if(!news) {
+      throw new HttpException("News " + slug + " does not exist", HttpStatus.NOT_FOUND);
+    }
+    Object.assign(news,body);
+    const updatedNews = await this.newsRepository.save(news)
+    return updatedNews;
   }
 
   buildNewsResponse(news, count) {
